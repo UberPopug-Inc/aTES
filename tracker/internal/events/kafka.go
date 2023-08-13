@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/Nerzal/gocloak/v13"
+	"github.com/UberPopug-Inc/aTES/auth/internal/service"
 	"github.com/segmentio/kafka-go"
 )
 
@@ -31,30 +31,26 @@ func NewKafka() *Kafka {
 	return k
 }
 
-func (k *Kafka) Logged(ctx context.Context, user gocloak.UserInfo) error {
+func (k *Kafka) Done(ctx context.Context, taskID string) error {
 	return k.writer.WriteMessages(ctx, kafka.Message{
-		Key:   []byte("logged_user"),
-		Value: []byte(user.String()),
+		Topic: topic,
+		Key:   []byte("task_done"),
+		Value: []byte(taskID),
 	})
 }
 
-func (k *Kafka) Created(ctx context.Context, userID string) error {
+func (k *Kafka) Created(ctx context.Context, taskID string) error {
 	return k.writer.WriteMessages(ctx, kafka.Message{
-		Key:   []byte("created_user"),
-		Value: []byte(userID),
+		Topic: topic,
+		Key:   []byte("task_created"),
+		Value: []byte(taskID),
 	})
 }
 
-func (k *Kafka) Updated(ctx context.Context, user gocloak.User) error {
+func (k *Kafka) Assigned(ctx context.Context, task service.Task) error {
 	return k.writer.WriteMessages(ctx, kafka.Message{
-		Key:   []byte("updated_user"),
-		Value: []byte(user.String()),
-	})
-}
-
-func (k *Kafka) Deleted(ctx context.Context, userID string) error {
-	return k.writer.WriteMessages(ctx, kafka.Message{
-		Key:   []byte("deleted_user"),
-		Value: []byte(userID),
+		Topic: topic,
+		Key:   []byte("task_assigned"),
+		Value: []byte(task.String()),
 	})
 }
