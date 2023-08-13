@@ -2,6 +2,15 @@ POST http://localhost:8888/login
 Content-Type: application/json
 
 {
-  "user": "f34cb00b-8176-4420-af8e-9b6d09162d80",
+  "user": "popug",
+  "password": "popug"
+}
+
+###
+POST http://localhost:8888/login
+Content-Type: application/json
+
+{
+  "user": "popug",
   "password": "popug"
 }
