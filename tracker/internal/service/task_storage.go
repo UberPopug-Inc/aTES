@@ -18,8 +18,8 @@ type Task struct {
 	ID          string     `json:"ID,omitempty"`
 	Description string     `json:"description,omitempty"`
 	Status      TaskStatus `json:"status,omitempty"`
-	WorkerID    string     `json:"workerID,omitempty"`
-	Cost        uint32     `json:"cost,omitempty"`
+	workerID    string     `json:"workerID,omitempty"`
+	cost        uint32     `json:"cost,omitempty"`
 }
 
 type TaskStorage struct {
@@ -41,8 +41,8 @@ func (t *TaskStorage) Add(description string, status TaskStatus, workerID string
 		ID:          uuid.NewString(),
 		Description: description,
 		Status:      status,
-		WorkerID:    workerID,
-		Cost:        uint32(rand.Intn(1000)),
+		workerID:    workerID,
+		cost:        uint32(rand.Intn(1000)),
 	}
 
 	t.tasks[tt.ID] = tt
