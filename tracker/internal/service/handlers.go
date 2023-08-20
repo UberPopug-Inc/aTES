@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -50,6 +51,14 @@ func (s *Service) NewHandle(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": err.Error(),
+		})
+	}
+
+	if err := s.taskEvents.Created(context.TODO(), taskID); err != nil {
+		slog.Error("error create task", err)
+
+		c.JSON(http.StatusOK, gin.H{
+			"message": taskID,
 		})
 	}
 
