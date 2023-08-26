@@ -22,12 +22,12 @@ type Kafka struct {
 func NewKafka() *Kafka {
 	l := log.New(os.Stdout, "kafka writer: ", 0)
 
-	k := &Kafka{writer: kafka.NewWriter(kafka.WriterConfig{
-		Brokers: []string{brokerAddress},
-		Topic:   "topic",
-		Logger:  l,
-	})}
-	k.writer.AllowAutoTopicCreation = true
+	k := &Kafka{writer: &kafka.Writer{
+		Addr:                   kafka.TCP(brokerAddress),
+		RequiredAcks:           kafka.RequireAll,
+		Logger:                 l,
+		AllowAutoTopicCreation: true,
+	}}
 
 	return k
 }
@@ -52,8 +52,8 @@ func (k *Kafka) Done(ctx context.Context, task service.Task) error {
 	}
 
 	return k.writer.WriteMessages(ctx, kafka.Message{
-		Topic: "task",
-		Key:   []byte("task_done"),
+		Topic: "task_done",
+		Key:   []byte("event"),
 		Value: []byte(event.string()),
 	})
 }
@@ -78,8 +78,8 @@ func (k *Kafka) Created(ctx context.Context, task service.Task) error {
 	}
 
 	return k.writer.WriteMessages(ctx, kafka.Message{
-		Topic: "task",
-		Key:   []byte("task_created"),
+		Topic: "task_done",
+		Key:   []byte("event"),
 		Value: []byte(event.string()),
 	})
 }
@@ -104,8 +104,8 @@ func (k *Kafka) Assigned(ctx context.Context, task service.Task) error {
 	}
 
 	return k.writer.WriteMessages(ctx, kafka.Message{
-		Topic: "task",
-		Key:   []byte("task_assigned"),
+		Topic: "task_assigned",
+		Key:   []byte("event"),
 		Value: []byte(event.string()),
 	})
 }
