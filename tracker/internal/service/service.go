@@ -16,12 +16,12 @@ type Service struct {
 	rest        *gin.Engine
 	client      *gocloak.GoCloak
 	restyClient *resty.Client
-	taskEvents  *TaskEventer
+	taskEvents  TaskEventer
 	popugs      *PopugsStorage
 	tasks       *TaskStorage
 }
 
-func New(taskEvents *TaskEventer) *Service {
+func New(taskEvents TaskEventer) *Service {
 	s := &Service{
 		taskEvents: taskEvents,
 		popugs:     NewPopugsStorage(),
@@ -54,7 +54,7 @@ func (s *Service) TaskDone(ctx context.Context, jwt string, taskID string) error
 
 	s.tasks.Done(taskID)
 
-	if err := s.taskEvents.Done(ctx, taskID); err != nil {
+	if err := s.taskEvents.Done(ctx, s.tasks.tasks[taskID]); err != nil {
 		return err
 	}
 
@@ -64,7 +64,7 @@ func (s *Service) TaskDone(ctx context.Context, jwt string, taskID string) error
 func (s *Service) NewTask(ctx context.Context, desc string, status TaskStatus, workerID string) (string, error) {
 	taskID := s.tasks.Add(desc, status, workerID)
 
-	if err := s.taskEvents.Created(ctx, taskID); err != nil {
+	if err := s.taskEvents.Created(ctx, s.tasks.tasks[taskID]); err != nil {
 		return "", err
 	}
 

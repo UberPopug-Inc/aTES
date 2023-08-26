@@ -2,10 +2,11 @@ package service
 
 import (
 	"context"
+
+	"github.com/UberPopug-Inc/aTES/accounting/internal/events"
 )
 
 type TaskEventer interface {
-	Done(ctx context.Context, taskID string) error
-	Created(ctx context.Context, taskID string) error
-	Assigned(ctx context.Context, task Task) error
+	AssignedPull(ctx context.Context) (*events.TaskV1, error)
+	DonePull(ctx context.Context) (*events.TaskV1, error)
 }

@@ -2,41 +2,35 @@ package service
 
 import (
 	"context"
-	"crypto/tls"
 	"log"
+	"math/rand"
 
-	"github.com/Nerzal/gocloak/v13"
 	"github.com/gin-gonic/gin"
-	"github.com/go-resty/resty/v2"
 )
 
 const realm = "master"
 
 type Service struct {
-	rest        *gin.Engine
-	client      *gocloak.GoCloak
-	restyClient *resty.Client
-	taskEvents  TaskEventer
-	popugs      *PopugsStorage
-	tasks       *TaskStorage
+	rest           *gin.Engine
+	taskEvents     TaskEventer
+	billingStorage *BillingStorage
 }
 
 func New(taskEvents TaskEventer) *Service {
 	s := &Service{
-		taskEvents: taskEvents,
-		popugs:     NewPopugsStorage(),
-		tasks:      NewTaskStorage(),
+		taskEvents:     taskEvents,
+		billingStorage: NewPopugsStorage(),
 	}
 
 	s.rest = gin.Default()
-	s.rest.POST("/done", s.DoneHandle)
-	s.rest.POST("/new", s.NewHandle)
-	s.rest.POST("/shuffle", s.ShuffleHandle)
+	s.rest.POST("/stat", s.StatHandle)
+	s.rest.POST("/list", s.ListHandle)
 
-	s.client = gocloak.NewClient("http://localhost:8080/accounting")
-	s.restyClient = s.client.RestyClient()
-	s.restyClient.SetDebug(true)
-	s.restyClient.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
+	ctx := context.TODO()
+
+	go s.RunAssign(ctx)
+
+	go s.RunDone(ctx)
 
 	return s
 }
@@ -49,40 +43,32 @@ func (s *Service) Run() error {
 	return nil
 }
 
-func (s *Service) TaskDone(ctx context.Context, jwt string, taskID string) error {
-	// TODO: JWT analyze
+func (s *Service) RunAssign(ctx context.Context) error {
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+		}
 
-	s.tasks.Done(taskID)
-
-	if err := s.taskEvents.Done(ctx, taskID); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *Service) NewTask(ctx context.Context, desc string, status TaskStatus, workerID string) (string, error) {
-	taskID := s.tasks.Add(desc, status, workerID)
-
-	if err := s.taskEvents.Created(ctx, taskID); err != nil {
-		return "", err
-	}
-
-	return taskID, nil
-}
-
-func (s *Service) ShuffleTasks(ctx context.Context, jwt string) error {
-	// TODO: JWT
-
-	for key, value := range s.tasks.tasks {
-		t := value
-		t.WorkerID = s.popugs.GetRandom().ID
-		s.tasks.tasks[key] = t
-
-		if err := s.taskEvents.Assigned(ctx, t); err != nil {
-			return err
+		task, err := s.taskEvents.AssignedPull(ctx)
+		if err == nil {
+			s.billingStorage.Credit(task.Data.AssignUUID, uint64(rand.Intn(100)))
 		}
 	}
+}
 
-	return nil
+func (s *Service) RunDone(ctx context.Context) error {
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+		}
+
+		task, err := s.taskEvents.DonePull(ctx)
+		if err == nil {
+			s.billingStorage.Debit(task.Data.AssignUUID, uint64(rand.Intn(100)))
+		}
+	}
 }
