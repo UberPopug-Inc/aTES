@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/UberPopug-Inc/aTES/tracker/internal/service"
+	"github.com/UberPopug-Inc/aTES/accounting/internal/service"
 	"github.com/google/uuid"
 	"github.com/segmentio/kafka-go"
 )

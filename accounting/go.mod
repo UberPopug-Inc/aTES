@@ -1,4 +1,4 @@
-module github.com/UberPopug-Inc/aTES/tracker
+module github.com/UberPopug-Inc/aTES/accounting
 
 go 1.20
 

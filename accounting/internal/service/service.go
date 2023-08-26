@@ -16,12 +16,12 @@ type Service struct {
 	rest        *gin.Engine
 	client      *gocloak.GoCloak
 	restyClient *resty.Client
-	taskEvents  *TaskEventer
+	taskEvents  TaskEventer
 	popugs      *PopugsStorage
 	tasks       *TaskStorage
 }
 
-func New(taskEvents *TaskEventer) *Service {
+func New(taskEvents TaskEventer) *Service {
 	s := &Service{
 		taskEvents: taskEvents,
 		popugs:     NewPopugsStorage(),
@@ -33,7 +33,7 @@ func New(taskEvents *TaskEventer) *Service {
 	s.rest.POST("/new", s.NewHandle)
 	s.rest.POST("/shuffle", s.ShuffleHandle)
 
-	s.client = gocloak.NewClient("http://localhost:8080/tracker")
+	s.client = gocloak.NewClient("http://localhost:8080/accounting")
 	s.restyClient = s.client.RestyClient()
 	s.restyClient.SetDebug(true)
 	s.restyClient.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
@@ -72,6 +72,8 @@ func (s *Service) NewTask(ctx context.Context, desc string, status TaskStatus, w
 }
 
 func (s *Service) ShuffleTasks(ctx context.Context, jwt string) error {
+	// TODO: JWT
+
 	for key, value := range s.tasks.tasks {
 		t := value
 		t.WorkerID = s.popugs.GetRandom().ID
