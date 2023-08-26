@@ -54,7 +54,7 @@ func (s *Service) NewHandle(c *gin.Context) {
 		})
 	}
 
-	if err := s.taskEvents.Created(context.TODO(), taskID); err != nil {
+	if err := s.taskEvents.Created(context.TODO(), s.tasks.tasks[taskID]); err != nil {
 		slog.Error("error create task", err)
 
 		c.JSON(http.StatusOK, gin.H{

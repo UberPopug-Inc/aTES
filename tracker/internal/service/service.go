@@ -33,7 +33,7 @@ func New(taskEvents TaskEventer) *Service {
 	s.rest.POST("/new", s.NewHandle)
 	s.rest.POST("/shuffle", s.ShuffleHandle)
 
-	s.client = gocloak.NewClient("http://localhost:8080/auth")
+	s.client = gocloak.NewClient("http://localhost:8080/tracker")
 	s.restyClient = s.client.RestyClient()
 	s.restyClient.SetDebug(true)
 	s.restyClient.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
@@ -54,7 +54,7 @@ func (s *Service) TaskDone(ctx context.Context, jwt string, taskID string) error
 
 	s.tasks.Done(taskID)
 
-	if err := s.taskEvents.Done(ctx, taskID); err != nil {
+	if err := s.taskEvents.Done(ctx, s.tasks.tasks[taskID]); err != nil {
 		return err
 	}
 
@@ -64,7 +64,7 @@ func (s *Service) TaskDone(ctx context.Context, jwt string, taskID string) error
 func (s *Service) NewTask(ctx context.Context, desc string, status TaskStatus, workerID string) (string, error) {
 	taskID := s.tasks.Add(desc, status, workerID)
 
-	if err := s.taskEvents.Created(ctx, taskID); err != nil {
+	if err := s.taskEvents.Created(ctx, s.tasks.tasks[taskID]); err != nil {
 		return "", err
 	}
 
@@ -72,11 +72,9 @@ func (s *Service) NewTask(ctx context.Context, desc string, status TaskStatus, w
 }
 
 func (s *Service) ShuffleTasks(ctx context.Context, jwt string) error {
-	// TODO: JWT
-
 	for key, value := range s.tasks.tasks {
 		t := value
-		t.workerID = s.popugs.GetRandom().ID
+		t.WorkerID = s.popugs.GetRandom().ID
 		s.tasks.tasks[key] = t
 
 		if err := s.taskEvents.Assigned(ctx, t); err != nil {
