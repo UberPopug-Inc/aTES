@@ -5,7 +5,7 @@ import (
 )
 
 type TaskEventer interface {
-	Done(ctx context.Context, taskID string) error
-	Created(ctx context.Context, taskID string) error
+	Done(ctx context.Context, task Task) error
+	Created(ctx context.Context, task Task) error
 	Assigned(ctx context.Context, task Task) error
 }

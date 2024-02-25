@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/UberPopug-Inc/aTES/tracker/internal/events"
-	"github.com/UberPopug-Inc/aTES/tracker/internal/service"
+	"github.com/UberPopug-Inc/aTES/accounting/internal/events"
+	"github.com/UberPopug-Inc/aTES/accounting/internal/service"
 )
 
 func main() {
